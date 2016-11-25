@@ -57,7 +57,7 @@ function getTestSample(dataset, idx)
 end
 
 function getIterator(dataset)
-    return tnt.ParallelIterator{
+    return tnt.ParallelDatasetIterator{
         dataset = tnt.BatchDataset{
             batchsize = opt.batchsize,
             dataset = dataset
