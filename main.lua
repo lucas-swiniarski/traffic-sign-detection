@@ -58,11 +58,13 @@ end
 
 function getIterator(dataset)
     return tnt.ParallelDatasetIterator{
-        dataset = tnt.BatchDataset{
+      closure = function()
+        return tnt.BatchDataset{
             batchsize = opt.batchsize,
             dataset = dataset
-        },
-        nthread = opt.nThreads
+        }
+      end,
+      nthread = opt.nThreads
     }
 end
 

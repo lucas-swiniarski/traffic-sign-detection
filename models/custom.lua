@@ -1,6 +1,7 @@
 local nn = require 'nn'
 
 -- Build model with cudnn Convolution if necessary :
+-- 32x32 entry
 
 function build_model(libs)
   local SpatialConvolution = libs['SpatialConvolution']
