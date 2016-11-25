@@ -57,15 +57,23 @@ function getTestSample(dataset, idx)
 end
 
 function getIterator(dataset)
-    return tnt.ParallelDatasetIterator{
-      closure = function()
-        return tnt.BatchDataset{
-            batchsize = opt.batchsize,
-            dataset = dataset
-        }
-      end,
-      nthread = opt.nThreads
-    }
+  local d = tnt.BatchDataset{
+      batchsize = opt.batchsize,
+      dataset = dataset
+  }
+
+  d = d:shuffle() -- before the iterator()
+
+  -- So the we can call 'iterator:exec('manualSeed', seed)'
+  function d:manualSeed(seed) torch.manualSeed(opt.manualSeed) end
+
+  return tnt.ParallelDatasetIterator{
+    nthread = opt.nThreads,
+    init = function() require 'torchnet' end,
+    closure = function()
+      return d
+    end
+  }
 end
 
 local trainData = torch.load(DATA_PATH..'train.t7')
@@ -102,7 +110,6 @@ testDataset = tnt.ListDataset{
         }
     end
 }
-
 
 -- If cudnn, get the fast convolutions
 libs = {}
@@ -204,27 +211,32 @@ end
 local epoch = 1
 
 while epoch <= opt.nEpochs do
-    trainDataset:select('train')
-    engine:train{
-        network = model,
-        criterion = criterion,
-        iterator = getIterator(trainDataset),
-        optimMethod = optim.sgd,
-        maxepoch = 1,
-        config = {
-            learningRate = opt.LR,
-            momentum = opt.momentum
-        }
-    }
+  trainDataset:select('train')
+  engine:train{
+      network = model,
+      criterion = criterion,
+      iterator = getIterator(trainDataset),
+      optimMethod = optim.sgd,
+      maxepoch = 1,
+      config = {
+          learningRate = opt.LR,
+          momentum = opt.momentum
+      }
+  }
 
-    trainDataset:select('val')
-    engine:test{
-        network = model,
-        criterion = criterion,
-        iterator = getIterator(trainDataset)
-    }
-    print('Done with Epoch '..tostring(epoch))
-    epoch = epoch + 1
+  trainDataset:select('val')
+  engine:test{
+      network = model,
+      criterion = criterion,
+      iterator = getIterator(trainDataset)
+  }
+
+  print('Done with Epoch '..tostring(epoch))
+  epoch = epoch + 1
+
+  trainDataset:select('train')
+  trainDataset:exec('manualSeed', epoch)
+  trainDataset:exec('resample')
 end
 
 -- Do
@@ -242,18 +254,18 @@ batch = 1
 --  file that has to be uploaded in kaggle.
 --]]
 engine.hooks.onForward = function(state)
-    local fileNames  = state.sample.sampleId
-    local _, pred = state.network.output:max(2)
-    pred = pred - 1
-    for i = 1, pred:size(1) do
-        submission:write(string.format("%05d,%d\n", fileNames[i][1], pred[i][1]))
-    end
-    xlua.progress(batch, state.iterator.dataset:size())
-    batch = batch + 1
+  local fileNames  = state.sample.sampleId
+  local _, pred = state.network.output:max(2)
+  pred = pred - 1
+  for i = 1, pred:size(1) do
+      submission:write(string.format("%05d,%d\n", fileNames[i][1], pred[i][1]))
+  end
+  xlua.progress(batch, state.iterator.dataset:size())
+  batch = batch + 1
 end
 
 engine.hooks.onEnd = function(state)
-    submission:close()
+  submission:close()
 end
 
 engine:test{
