@@ -59,7 +59,7 @@ end
 function getIterator(dataset)
   return tnt.DatasetIterator{
     nthread = opt.nThreads,
-    tnt.BatchDataset{
+    dataset = tnt.BatchDataset{
         batchsize = opt.batchsize,
         dataset = dataset
     }
