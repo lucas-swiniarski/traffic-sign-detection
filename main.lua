@@ -64,7 +64,12 @@ function getIterator(dataset)
 
   return tnt.ParallelDatasetIterator{
     nthread = opt.nThreads,
-    init = function() require 'torchnet' end,
+    init = function()
+      require 'torchnet'
+      require 'torch'
+      require 'image'
+      getTrainSample = getTrainSample
+    end,
     closure = function()
       return d
     end
