@@ -18,10 +18,8 @@ function M.parse(arg)
     cmd:option('-logDir',           'logs',         'log directory')
     cmd:option('-model',            '',             'Model to use for training')
     cmd:option('-verbose',          'false',        'Print stats for every batch')
-    --[[
-    -- Hint: Use this option to convert your code to use GPUs
-    --]]
-    -- cmd:option('-cuda',            '',             'Use cuda tensor')
+    cmd:option('-cudnn',            'false',             'Use cuda tensor')
+    cmd:option('-balance',            'false',             'Rebalance classes')
 
     local opt = cmd:parse(arg or {})
 

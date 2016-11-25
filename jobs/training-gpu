@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#PBS -l nodes=1:ppn=2:gpus=1:k80
+#PBS -l walltime=24:00:00
+#PBS -l mem=16GB
+#PBS -N train-paint-data
+#PBS -o /work/ls4411/job-output
+#PBS -M $lucas.swiniarski@nyu.edu
+#PBS -j oe
+
+module purge
+
+cd /scratch/ls4411/cv_hm3/traffic-sign-detection
+
+module load torch/gnu/20160623
+
+th main.lua -cudnn -lr 0.01 -batchsize 128 -train train -nEpochs 500
+
+# leave a blank line at the end

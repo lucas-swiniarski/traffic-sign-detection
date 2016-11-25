@@ -3,11 +3,9 @@ require 'optim'
 require 'os'
 require 'optim'
 require 'xlua'
--- require 'cunn'
--- require 'cudnn' -- faster convolutions
 
 --[[
---  Hint:  Plot as much as you can.  
+--  Hint:  Plot as much as you can.
 --  Look into torch wiki for packages that can help you plot.
 --]]
 
@@ -31,7 +29,7 @@ end
 
 --[[
 -- Hint:  Should we add some more transforms? shifting, scaling?
--- Should all images be of size 32x32?  Are we losing 
+-- Should all images be of size 32x32?  Are we losing
 -- information by resizing bigger images to a smaller size?
 --]]
 function transformInput(inp)
@@ -59,14 +57,12 @@ function getTestSample(dataset, idx)
 end
 
 function getIterator(dataset)
-    --[[
-    -- Hint:  Use ParallelIterator for using multiple CPU cores
-    --]]
-    return tnt.DatasetIterator{
+    return tnt.ParallelIterator{
         dataset = tnt.BatchDataset{
             batchsize = opt.batchsize,
             dataset = dataset
-        }
+        },
+        nthread = opt.nThreads
     }
 end
 
@@ -77,9 +73,9 @@ trainDataset = tnt.SplitDataset{
     partitions = {train=0.9, val=0.1},
     initialpartition = 'train',
     --[[
-    --  Hint:  Use a resampling strategy that keeps the 
-    --  class distribution even during initial training epochs 
-    --  and then slowly converges to the actual distribution 
+    --  Hint:  Use a resampling strategy that keeps the
+    --  class distribution even during initial training epochs
+    --  and then slowly converges to the actual distribution
     --  in later stages of training.
     --]]
     dataset = tnt.ShuffleDataset{
@@ -106,16 +102,38 @@ testDataset = tnt.ListDataset{
 }
 
 
---[[
--- Hint:  Use :cuda to convert your model to use GPUs
---]]
-local model = require("models/".. opt.model)
+-- If cudnn, get the fast convolutions
+libs = {}
+
+torch.setdefaulttensortype('torch.FloatTensor')
+
+if opt.cudnn then
+    print("using cudnn")
+    require 'cudnn'
+    require 'cunn'
+    libs['SpatialConvolution'] = cudnn.SpatialConvolution
+    libs['SpatialMaxPooling'] = cudnn.SpatialMaxPooling
+    libs['ReLU'] = cudnn.ReLU
+else
+    libs['SpatialConvolution'] = nn.SpatialConvolution
+    libs['SpatialMaxPooling'] = nn.SpatialMaxPooling
+    libs['ReLU'] = nn.ReLU
+end
+
+require("models/" .. opt.model)
+
+local model = build_model(libs)
 local engine = tnt.OptimEngine()
 local meter = tnt.AverageValueMeter()
 local criterion = nn.CrossEntropyCriterion()
 local clerr = tnt.ClassErrorMeter{topk = {1}}
 local timer = tnt.TimeMeter()
 local batch = 1
+
+if opt.cudnn then
+  model = model:cuda()
+  criterion = criterion:cuda()
+end
 
 -- print(model)
 
@@ -131,12 +149,16 @@ engine.hooks.onStart = function(state)
     end
 end
 
---[[
--- Hint:  Use onSample function to convert to 
---        cuda tensor for using GPU
---]]
--- engine.hooks.onSample = function(state)
--- end
+
+-- Cuda for input / label
+engine.hooks.onSample = function(state)
+  if opt.cudnn then
+    state.sample.input = state.sample.input:cuda()
+    state.sample.target = state.sample.target:cuda()
+  else
+    state.sample.input = state.sample.input:float()
+  end
+end
 
 engine.hooks.onForwardCriterion = function(state)
     meter:add(state.criterion.output)
@@ -151,7 +173,28 @@ engine.hooks.onForwardCriterion = function(state)
     timer:incUnit()
 end
 
+-- After each epoch, if not learning : Divide by 2 learning rate.
+
+local best_val = nil
+
 engine.hooks.onEnd = function(state)
+
+    if mode == "Val" then
+
+      local val_err = clerr:value{k=1}
+
+      if best_val == nil then
+        best_val = val_err
+      end
+
+      if val_err > best_val then
+        opt.LR = opt.LR / 2
+        print("Not the best validation. Best so far : ", best_val, "New lr : ", opt.LR)
+      else
+        best_val = val_err
+      end
+    end
+
     print(string.format("%s: avg. loss: %2.4f; avg. error: %2.4f, time: %2.4f",
     mode, meter:value(), clerr:value{k = 1}, timer:value()))
 end
@@ -181,6 +224,12 @@ while epoch <= opt.nEpochs do
     print('Done with Epoch '..tostring(epoch))
     epoch = epoch + 1
 end
+
+-- Do
+-- Not
+-- Change
+-- Anything
+-- Here
 
 local submission = assert(io.open(opt.logDir .. "/submission.csv", "w"))
 submission:write("Filename,ClassId\n")
