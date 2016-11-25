@@ -40,20 +40,20 @@ function transformInput(inp)
 end
 
 function getTrainSample(dataset, idx)
-    r = dataset[idx]
-    classId, track, file = r[9], r[1], r[2]
-    file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
-    return transformInput(image.load(DATA_PATH .. '/train_images/'..file))
+  r = dataset[idx]
+  classId, track, file = r[9], r[1], r[2]
+  file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
+  return transformInput(image.load(DATA_PATH .. '/train_images/'..file))
 end
 
 function getTrainLabel(dataset, idx)
-    return torch.LongTensor{dataset[idx][9] + 1}
+  return torch.LongTensor{dataset[idx][9] + 1}
 end
 
 function getTestSample(dataset, idx)
-    r = dataset[idx]
-    file = DATA_PATH .. "/test_images/" .. string.format("%05d.ppm", r[1])
-    return transformInput(image.load(file))
+  r = dataset[idx]
+  file = DATA_PATH .. "/test_images/" .. string.format("%05d.ppm", r[1])
+  return transformInput(image.load(file))
 end
 
 function getIterator(dataset)
@@ -211,6 +211,7 @@ end
 local epoch = 1
 
 while epoch <= opt.nEpochs do
+  print("Epoch : " .. epoch)
   trainDataset:select('train')
   engine:train{
       network = model,
