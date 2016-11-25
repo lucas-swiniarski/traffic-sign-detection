@@ -65,14 +65,14 @@ function getIterator(dataset)
   return tnt.ParallelDatasetIterator{
     nthread = opt.nThreads,
     init = function()
-      require 'torchnet'
-      require 'torch'
-      require 'image'
+      local tnt = require 'torchnet'
+      local torch = require 'torch'
+      local image = require 'image'
     end,
     closure = function()
       local WIDTH, HEIGHT = 32, 32
       local DATA_PATH = (opt.data ~= '' and opt.data or './data/')
-      
+
       function resize(img)
           return image.scale(img, WIDTH,HEIGHT)
       end
