@@ -252,6 +252,10 @@ local epoch = 1
 
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
+  for _, v in pairs(trainDataset:exec("size")) do
+    size = size + v
+  end
+  print('Number of batch : ' .. size)
   engine:train{
       network = model,
       criterion = criterion,
