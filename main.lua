@@ -129,8 +129,57 @@ function getIterator(dataset)
   }
 end
 
+function balanceDataset(dataset)
+  print(' Balancing classes, there is ' .. dataset:size()[1] .. ' images.')
+
+  local label_images = {}
+
+  for index = 1, dataset:size()[1] do
+    local label = getTrainLabel(dataset, index)[1]
+
+    if label_images[label] ~= nil then
+      table.insert(label_images[label], index)
+    else
+      label_images[label] = {index}
+    end
+  end
+
+  local max_number_of_element_per_class = 0
+
+  for class, images in pairs(label_images) do
+    if table.getn(images) > max_number_of_element_per_class then
+      max_number_of_element_per_class = table.getn(images)
+    end
+  end
+
+  balancing = {}
+  for class, images in pairs(label_images) do
+    for i, image in pairs(images) do
+      table.insert(balancing, image)
+    end
+    local image_inserted = table.getn(images)
+    while image_inserted < max_number_of_element_per_class do
+      image_inserted = image_inserted + 1
+      table.insert(balancing, images[torch.random(#images)])
+    end
+  end
+
+  print(' We now have : ' .. #result .. ' images.')
+  result = torch.IntTensor(table.getn(balancing), dataset:size()[2])
+
+  for i = 1, table.getn(balancing) do
+    result[i] = dataset[balancing[i]]
+  end
+
+  return result
+end
+
 local trainData = torch.load(DATA_PATH..'train.t7')
 local testData = torch.load(DATA_PATH..'test.t7')
+
+if opt.balance then
+  trainData = balanceDataset(trainData)
+end
 
 trainDataset = tnt.SplitDataset{
     partitions = {train=(100 - opt.val) / 100, val=opt.val / 100},
@@ -312,7 +361,7 @@ local submission = assert(io.open(opt.logDir .. "/submission.csv", "w"))
 submission:write("Filename,ClassId\n")
 batch = 1
 
-numberOfBatchs = testDataset:size()
+numberOfBatchs = 100
 --[[
 --  This piece of code creates the submission
 --  file that has to be uploaded in kaggle.
