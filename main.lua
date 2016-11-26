@@ -23,6 +23,9 @@ torch.setdefaulttensortype('torch.DoubleTensor')
 torch.manualSeed(opt.manualSeed)
 -- cutorch.manualSeedAll(opt.manualSeed)
 
+local lopt = opt
+local lfunctions = {}
+
 function resize(img)
     return image.scale(img, WIDTH,HEIGHT)
 end
@@ -65,14 +68,11 @@ function getIterator(dataset)
   return tnt.ParallelDatasetIterator{
     nthread = opt.nThreads,
     init = function()
-      local tnt = require 'torchnet'
-      local torch = require 'torch'
-      local image = require 'image'
-    end,
-    closure = function()
-      local WIDTH, HEIGHT = 32, 32
-      local DATA_PATH = (opt.data ~= '' and opt.data or './data/')
+      require 'torchnet'
 
+      local image = require'image'
+
+      opt = lopt
       function resize(img)
           return image.scale(img, WIDTH,HEIGHT)
       end
@@ -105,7 +105,8 @@ function getIterator(dataset)
         file = DATA_PATH .. "/test_images/" .. string.format("%05d.ppm", r[1])
         return transformInput(image.load(file))
       end
-
+    end,
+    closure = function()
       return d
     end
   }
