@@ -204,18 +204,16 @@ engine.hooks.onSample = function(state)
   end
 end
 
+local numberOfBatchs = 0
+
 engine.hooks.onForwardCriterion = function(state)
     meter:add(state.criterion.output)
     clerr:add(state.network.output, state.sample.target)
-    size = 0
-    for _, v in pairs(state.iterator:exec("size")) do
-      size = size + v
-    end
     if opt.verbose == true then
         print(string.format("%s Batch: %d/%d; avg. loss: %2.4f; avg. error: %2.4f",
-                mode, batch, size, meter:value(), clerr:value{k = 1}))
+                mode, batch, numberOfBatchs, meter:value(), clerr:value{k = 1}))
     else
-        xlua.progress(batch, size)
+        xlua.progress(batch, numberOfBatchs)
     end
     batch = batch + 1 -- batch increment has to happen here to work for train, val and test.
     timer:incUnit()
@@ -251,6 +249,11 @@ local epoch = 1
 
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
+  numberOfBatchs = 0
+  for _, v in pairs(trainDataset:exec("size")) do
+    numberOfBatchs = numberOfBatchs + v
+  end
+
   engine:train{
       network = model,
       criterion = criterion,
@@ -269,6 +272,11 @@ while epoch <= opt.nEpochs do
       criterion = criterion,
       iterator = getIterator(trainDataset)
   }
+
+  numberOfBatchs = 0
+  for _, v in pairs(trainDataset:exec("size")) do
+    numberOfBatchs = numberOfBatchs + v
+  end
 
   print('Done with Epoch '..tostring(epoch))
   epoch = epoch + 1
