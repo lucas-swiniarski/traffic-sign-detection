@@ -27,9 +27,10 @@ local lopt = opt
 local lfunctions = {}
 
 function resize(img)
-  local theta = torch.random(a=-opt.angle /360 * pi, b= opt.angle /360 * pi)
-  img = image.rotate(img, theta * pi,mode=)
-  return image.scale(img, WIDTH,HEIGHT)
+  local theta_max = opt.angle / 360 * pi
+  local theta = torch.uniform(- theta_max, theta_max)
+  img = image.rotate(img, theta * pi, 'bilinear')
+  return image.scale(img, WIDTH,HEIGHT, 'bicubic')
 end
 
 --[[
@@ -75,9 +76,10 @@ function getIterator(dataset)
 
       opt = lopt
       function resize(img)
-        local theta = torch.random(a=-opt.angle /360 * pi, b= opt.angle /360 * pi)
-        img = image.rotate(img, theta * pi,mode=)
-        return image.scale(img, WIDTH,HEIGHT)
+        local theta_max = opt.angle / 360 * pi
+        local theta = torch.uniform(- theta_max, theta_max)
+        img = image.rotate(img, theta * pi, 'bilinear')
+        return image.scale(img, WIDTH,HEIGHT, 'bicubic')
       end
 
 
