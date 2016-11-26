@@ -18,6 +18,8 @@ local opt = optParser.parse(arg)
 local WIDTH, HEIGHT = 32, 32
 local DATA_PATH = (opt.data ~= '' and opt.data or './data/')
 
+local theta_max = opt.angle / 360 * math.pi
+
 torch.setdefaulttensortype('torch.DoubleTensor')
 
 -- torch.setnumthreads(1)
@@ -28,11 +30,13 @@ local lopt = opt
 local lfunctions = {}
 
 function resize(img)
-  local theta_max = opt.angle / 360 * math.pi
-  local theta = torch.uniform(- theta_max, theta_max)
-  img = image.rotate(img, theta, 'bilinear')
   return image.scale(img, WIDTH,HEIGHT, 'bicubic')
 end
+
+function rotate(img)
+  img = image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear')
+end
+
 
 --[[
 -- Hint:  Should we add some more transforms? shifting, scaling?
@@ -41,7 +45,8 @@ end
 --]]
 function transformInput(inp)
     f = tnt.transform.compose{
-        [1] = resize
+        [1] = rotate,
+        [2] = resize
     }
     return f(inp)
 end
@@ -77,11 +82,14 @@ function getIterator(dataset)
       local math = require 'math'
 
       opt = lopt
+      theta_max = theta_max
+
       function resize(img)
-        local theta_max = opt.angle / 360 * math.pi
-        local theta = torch.uniform(- theta_max, theta_max)
-        img = image.rotate(img, theta, 'bilinear')
         return image.scale(img, WIDTH,HEIGHT, 'bicubic')
+      end
+
+      function rotate(img)
+        img = image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear')
       end
 
 
@@ -92,7 +100,8 @@ function getIterator(dataset)
       --]]
       function transformInput(inp)
           f = tnt.transform.compose{
-              [1] = resize
+              [1] = rotate,
+              [2] = resize
           }
           return f(inp)
       end
@@ -122,8 +131,6 @@ end
 
 local trainData = torch.load(DATA_PATH..'train.t7')
 local testData = torch.load(DATA_PATH..'test.t7')
-
-print("Training set : " .. (100 - opt.val) / 100 .. ", Valid set : " .. opt.val / 100)
 
 trainDataset = tnt.SplitDataset{
     partitions = {train=(100 - opt.val) / 100, val=opt.val / 100},
