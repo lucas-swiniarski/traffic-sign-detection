@@ -27,7 +27,9 @@ local lopt = opt
 local lfunctions = {}
 
 function resize(img)
-    return image.scale(img, WIDTH,HEIGHT)
+  local theta = torch.random(a=-opt.angle /360 * pi, b= opt.angle /360 * pi)
+  img = image.rotate(img, theta * pi,mode=)
+  return image.scale(img, WIDTH,HEIGHT)
 end
 
 --[[
@@ -73,8 +75,11 @@ function getIterator(dataset)
 
       opt = lopt
       function resize(img)
-          return image.scale(img, WIDTH,HEIGHT)
+        local theta = torch.random(a=-opt.angle /360 * pi, b= opt.angle /360 * pi)
+        img = image.rotate(img, theta * pi,mode=)
+        return image.scale(img, WIDTH,HEIGHT)
       end
+
 
       --[[
       -- Hint:  Should we add some more transforms? shifting, scaling?
@@ -114,8 +119,10 @@ end
 local trainData = torch.load(DATA_PATH..'train.t7')
 local testData = torch.load(DATA_PATH..'test.t7')
 
+print("Training set : " .. (100 - opt.val) / 100 .. ", Valid set : " .. opt.val / 100)
+
 trainDataset = tnt.SplitDataset{
-    partitions = {train=0.9, val=0.1},
+    partitions = {train=(100 - opt.val) / 100, val=opt.val / 100},
     initialpartition = 'train',
     --[[
     --  Hint:  Use a resampling strategy that keeps the
@@ -135,6 +142,9 @@ trainDataset = tnt.SplitDataset{
         }
     }
 }
+
+-- Resampling at each epoch with fixed seed.
+function trainDataset:manualSeed(seed) torch.manualSeed(seed) end
 
 testDataset = tnt.ListDataset{
     list = torch.range(1, testData:size(1)):long(),
