@@ -149,8 +149,6 @@ testDataset = tnt.ListDataset{
 -- If cudnn, get the fast convolutions
 libs = {}
 
-torch.setdefaulttensortype('torch.FloatTensor')
-
 if opt.cudnn then
     print("using cudnn")
     require 'cudnn'
@@ -249,8 +247,7 @@ local epoch = 1
 
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
-  numberOfBatchs = trainDataset:size()
-  print(numberOfBatchs)
+  numberOfBatchs = trainDataset:size() / opt.batchsize
 
   engine:train{
       network = model,
@@ -265,7 +262,7 @@ while epoch <= opt.nEpochs do
   }
 
   trainDataset:select('val')
-  numberOfBatchs = trainDataset:size()
+  numberOfBatchs = trainDataset:size() / opt.batchsize
 
   engine:test{
       network = model,
