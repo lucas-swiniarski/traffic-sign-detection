@@ -312,6 +312,7 @@ local submission = assert(io.open(opt.logDir .. "/submission.csv", "w"))
 submission:write("Filename,ClassId\n")
 batch = 1
 
+numberOfBatchs = testDataset:size()
 --[[
 --  This piece of code creates the submission
 --  file that has to be uploaded in kaggle.
@@ -323,7 +324,7 @@ engine.hooks.onForward = function(state)
   for i = 1, pred:size(1) do
       submission:write(string.format("%05d,%d\n", fileNames[i][1], pred[i][1]))
   end
-  xlua.progress(batch, state.iterator.dataset:size())
+  xlua.progress(batch, numberOfBatchs)
   batch = batch + 1
 end
 
