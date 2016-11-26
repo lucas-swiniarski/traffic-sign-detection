@@ -34,7 +34,7 @@ function resize(img)
 end
 
 function rotate(img)
-  img = image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear')
+  return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear')
 end
 
 
@@ -89,7 +89,7 @@ function getIterator(dataset)
       end
 
       function rotate(img)
-        img = image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear')
+        return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear')
       end
 
 
