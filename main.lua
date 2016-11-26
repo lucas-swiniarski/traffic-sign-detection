@@ -3,6 +3,7 @@ require 'optim'
 require 'os'
 require 'optim'
 require 'xlua'
+require 'math'
 
 --[[
 --  Hint:  Plot as much as you can.
@@ -27,7 +28,7 @@ local lopt = opt
 local lfunctions = {}
 
 function resize(img)
-  local theta_max = opt.angle / 360 * pi
+  local theta_max = opt.angle / 360 * math.pi
   local theta = torch.uniform(- theta_max, theta_max)
   img = image.rotate(img, theta * pi, 'bilinear')
   return image.scale(img, WIDTH,HEIGHT, 'bicubic')
@@ -73,10 +74,11 @@ function getIterator(dataset)
     init = function()
       local tnt = require 'torchnet'
       local image = require'image'
+      local math = require 'math'
 
       opt = lopt
       function resize(img)
-        local theta_max = opt.angle / 360 * pi
+        local theta_max = opt.angle / 360 * math.pi
         local theta = torch.uniform(- theta_max, theta_max)
         img = image.rotate(img, theta * pi, 'bilinear')
         return image.scale(img, WIDTH,HEIGHT, 'bicubic')
