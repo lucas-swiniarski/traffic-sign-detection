@@ -249,10 +249,7 @@ local epoch = 1
 
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
-  numberOfBatchs = 0
-  for _, v in pairs(trainDataset:exec("size")) do
-    numberOfBatchs = numberOfBatchs + v
-  end
+  numberOfBatchs = trainDataset:size()
 
   engine:train{
       network = model,
@@ -267,16 +264,13 @@ while epoch <= opt.nEpochs do
   }
 
   trainDataset:select('val')
+  numberOfBatchs = trainDataset:size()
+
   engine:test{
       network = model,
       criterion = criterion,
       iterator = getIterator(trainDataset)
   }
-
-  numberOfBatchs = 0
-  for _, v in pairs(trainDataset:exec("size")) do
-    numberOfBatchs = numberOfBatchs + v
-  end
 
   print('Done with Epoch '..tostring(epoch))
   epoch = epoch + 1
