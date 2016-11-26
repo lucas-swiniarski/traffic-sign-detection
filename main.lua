@@ -68,8 +68,7 @@ function getIterator(dataset)
   return tnt.ParallelDatasetIterator{
     nthread = opt.nThreads,
     init = function()
-      require 'torchnet'
-
+      local tnt = require 'torchnet'
       local image = require'image'
 
       opt = lopt
@@ -208,11 +207,16 @@ end
 engine.hooks.onForwardCriterion = function(state)
     meter:add(state.criterion.output)
     clerr:add(state.network.output, state.sample.target)
+    size = 0
+    for _, v in pairs(state.iterator.dataset:exec("size")) do
+      size = size + v
+    end
+
     if opt.verbose == true then
         print(string.format("%s Batch: %d/%d; avg. loss: %2.4f; avg. error: %2.4f",
-                mode, batch, state.iterator.dataset:size(), meter:value(), clerr:value{k = 1}))
+                mode, batch, size, meter:value(), clerr:value{k = 1}))
     else
-        xlua.progress(batch, state.iterator.dataset:size())
+        xlua.progress(batch, size)
     end
     batch = batch + 1 -- batch increment has to happen here to work for train, val and test.
     timer:incUnit()
