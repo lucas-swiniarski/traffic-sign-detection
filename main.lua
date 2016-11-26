@@ -154,7 +154,7 @@ trainDataset = tnt.SplitDataset{
     }
 }
 
--- Resampling at each epoch with fixed seed.
+-- Shuffle at each epoch with fixed seed.
 function trainDataset:manualSeed(seed) torch.manualSeed(seed) end
 
 testDataset = tnt.ListDataset{
