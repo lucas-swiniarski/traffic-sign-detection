@@ -30,7 +30,7 @@ local lfunctions = {}
 function resize(img)
   local theta_max = opt.angle / 360 * math.pi
   local theta = torch.uniform(- theta_max, theta_max)
-  img = image.rotate(img, theta * pi, 'bilinear')
+  img = image.rotate(img, theta, 'bilinear')
   return image.scale(img, WIDTH,HEIGHT, 'bicubic')
 end
 
@@ -80,7 +80,7 @@ function getIterator(dataset)
       function resize(img)
         local theta_max = opt.angle / 360 * math.pi
         local theta = torch.uniform(- theta_max, theta_max)
-        img = image.rotate(img, theta * pi, 'bilinear')
+        img = image.rotate(img, theta, 'bilinear')
         return image.scale(img, WIDTH,HEIGHT, 'bicubic')
       end
 
