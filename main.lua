@@ -217,7 +217,10 @@ end
 engine.hooks.onSample = function(state)
   if opt.cudnn then
     state.sample.input = state.sample.input:cuda()
-    state.sample.target = state.sample.target:cuda()
+    -- When Forwarding the testing set :
+    if state.sample.target ~= nil then
+      state.sample.target = state.sample.target:cuda()
+    end
   else
     state.sample.input = state.sample.input:float()
   end
