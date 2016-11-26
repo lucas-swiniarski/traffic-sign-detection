@@ -250,6 +250,7 @@ local epoch = 1
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
   numberOfBatchs = trainDataset:size()
+  print(numberOfBatchs)
 
   engine:train{
       network = model,
