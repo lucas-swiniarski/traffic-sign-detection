@@ -164,7 +164,7 @@ function balanceDataset(dataset)
     end
   end
 
-  print(' We now have : ' .. #result .. ' images.')
+  print(' We now have : ' .. #balancing .. ' images.')
   result = torch.IntTensor(table.getn(balancing), dataset:size()[2])
 
   for i = 1, table.getn(balancing) do
