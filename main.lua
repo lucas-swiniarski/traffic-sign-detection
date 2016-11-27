@@ -129,6 +129,53 @@ function getIterator(dataset)
   }
 end
 
+function balanceTrainingSet(dataset, epoch, trainData)
+  -- Balance training dataset, less & less given epoch.
+  local all_indexes = dataset.__dataset.__perm
+  local class_indexes = {}
+
+  for i = 1, dataset.__partitionsizes[1] do
+    local label = getTrainLabel(trainData, all_indexes[i])[1]
+    if class_indexes[label] ~= nil then
+      table.insert(class_indexes[label], i)
+    else
+      class_indexes[label]= {i}
+    end
+  end
+
+  local max = 0
+
+  for class, image_list in pairs(class_indexes) do
+    if table.getn(image_list) > max then
+      max = table.getn(image_list)
+    end
+  end
+
+  list_index_rebalanced = {}
+
+  for class, image_list in pairs(class_indexes) do
+    for i, image in pairs(image_list) do
+      table.insert(list_index_rebalanced, image)
+    end
+
+    local image_inserted = table.getn(image_list)
+
+    while image_inserted < max do
+      table.insert(list_index_rebalanced, image_list[torch.random(#image_list)])
+    end
+  end
+
+  local shuffle = torch.randperm(table.getn(list_index_rebalanced))
+
+  return tnt.ResampleDataset{
+    dataset = dataset,
+    size = table.getn(list_index_rebalanced),
+    sampler = function(dataset, idx)
+      return list_index_rebalanced[shuffle[idx]]
+    end
+  }
+end
+
 local trainData = torch.load(DATA_PATH..'train.t7')
 local testData = torch.load(DATA_PATH..'test.t7')
 
@@ -170,7 +217,7 @@ testDataset = tnt.ListDataset{
 -- If cudnn, get the fast convolutions
 libs = {}
 
-if opt.cudnn then
+if opt.cudnn == true then
     print("using cudnn")
     require 'cudnn'
     require 'cunn'
@@ -193,7 +240,7 @@ local clerr = tnt.ClassErrorMeter{topk = {1}}
 local timer = tnt.TimeMeter()
 local batch = 1
 
-if opt.cudnn then
+if opt.cudnn == true then
   model = model:cuda()
   criterion = criterion:cuda()
 end
@@ -215,7 +262,7 @@ end
 
 -- Cuda for input / label
 engine.hooks.onSample = function(state)
-  if opt.cudnn then
+  if opt.cudnn == true then
     state.sample.input = state.sample.input:cuda()
     -- When Forwarding the testing set :
     if state.sample.target ~= nil then
@@ -269,13 +316,15 @@ local epoch = 1
 
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
-  print({trainDataset})
-  numberOfBatchs = trainDataset:size() / opt.batchsize
+
+  balancedTrainDataset = balanceTrainingSet(trainDataset, epoch, trainData)
+
+  numberOfBatchs = balancedTrainDataset:size() / opt.batchsize
 
   engine:train{
       network = model,
       criterion = criterion,
-      iterator = getIterator(trainDataset),
+      iterator = getIterator(balancedTrainDataset),
       optimMethod = optim.sgd,
       maxepoch = 1,
       config = {
