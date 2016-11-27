@@ -10,11 +10,6 @@ function resize(img, theta_max)
   return image.scale(img, WIDTH,HEIGHT, 'bicubic')
 end
 
-function rotate(img, theta_max)
-  return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear')
-end
-
-
 --[[
 -- Hint:  Should we add some more transforms? shifting, scaling?
 -- Should all images be of size 32x32?  Are we losing

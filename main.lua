@@ -31,7 +31,9 @@ local lopt = opt
 local lfunctions = {}
 
 function getIterator(dataset, list_index_rebalanced, shuffle)
+
   local d = nil
+
   if list_index_rebalanced ~= nil then
     d = tnt.BatchDataset{
       dataset = tnt.ResampleDataset{
@@ -78,12 +80,6 @@ local testData = torch.load(DATA_PATH ..'test.t7')
 trainDataset = tnt.SplitDataset{
     partitions = {train=(100 - opt.val) / 100, val=opt.val / 100},
     initialpartition = 'train',
-    --[[
-    --  Hint:  Use a resampling strategy that keeps the
-    --  class distribution even during initial training epochs
-    --  and then slowly converges to the actual distribution
-    --  in later stages of training.
-    --]]
     dataset = tnt.ShuffleDataset{
         dataset = tnt.ListDataset{
             list = torch.range(1, trainData:size(1)):long(),
@@ -96,6 +92,8 @@ trainDataset = tnt.SplitDataset{
         }
     }
 }
+
+checkIfValidationSetConsistant(trainDataset)
 
 -- Shuffle at each epoch with fixed seed.
 function trainDataset:manualSeed(seed) torch.manualSeed(seed) end
@@ -215,7 +213,7 @@ while epoch <= opt.nEpochs do
 
   list_index_rebalanced, shuffle = balanceTrainingSet(trainDataset, epoch, opt.nEpochs, trainData)
 
-  numberOfBatchs = table.getn(list_index_rebalanced) / opt.batchsize
+  numberOfBatchs = torch.floor(table.getn(list_index_rebalanced) / opt.batchsize)
 
   engine:train{
       network = model,
@@ -230,7 +228,7 @@ while epoch <= opt.nEpochs do
   }
 
   trainDataset:select('val')
-  numberOfBatchs = trainDataset:size() / opt.batchsize
+  numberOfBatchs = torch.floor(trainDataset:size() / opt.batchsize)
 
   engine:test{
       network = model,
@@ -241,9 +239,9 @@ while epoch <= opt.nEpochs do
   print('Done with Epoch '..tostring(epoch))
   epoch = epoch + 1
 
-  trainDataset:select('train')
-  trainDataset:exec('manualSeed', epoch)
-  trainDataset:exec('resample')
+  --trainDataset:select('train')
+  --trainDataset:exec('manualSeed', epoch)
+  --trainDataset:exec('resample')
 end
 
 -- Do
