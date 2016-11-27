@@ -101,7 +101,7 @@ testDataset = tnt.ListDataset{
 -- If cudnn, get the fast convolutions
 libs = {}
 
-if opt.cudnn == true then
+if not opt.cudnn ~= true then
     print("using cudnn")
     require 'cudnn'
     require 'cunn'
@@ -124,7 +124,7 @@ local clerr = tnt.ClassErrorMeter{topk = {1}}
 local timer = tnt.TimeMeter()
 local batch = 1
 
-if opt.cudnn == true then
+if not opt.cudnn ~= true then
   model = model:cuda()
   criterion = criterion:cuda()
 end
@@ -146,7 +146,7 @@ end
 
 -- Cuda for input / label
 engine.hooks.onSample = function(state)
-  if opt.cudnn == true then
+  if not opt.cudnn ~= true then
     state.sample.input = state.sample.input:cuda()
     -- When Forwarding the testing set :
     if state.sample.target ~= nil then
@@ -160,7 +160,7 @@ local numberOfBatchs = 0
 engine.hooks.onForwardCriterion = function(state)
     meter:add(state.criterion.output)
     clerr:add(state.network.output, state.sample.target)
-    if opt.verbose == true then
+    if not opt.verbose ~= true then
         print(string.format("%s Batch: %d/%d; avg. loss: %2.4f; avg. error: %2.4f",
                 mode, batch, numberOfBatchs, meter:value(), clerr:value{k = 1}))
     else
@@ -201,7 +201,7 @@ local epoch = 1
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
 
-  if opt.balance == true then
+  if not opt.balance ~= true then
     list_index_rebalanced, shuffle = balanceTrainingSet(trainDataset, epoch, opt.nEpochs, trainData)
 
     numberOfBatchs = torch.floor(table.getn(list_index_rebalanced) / opt.batchsize)

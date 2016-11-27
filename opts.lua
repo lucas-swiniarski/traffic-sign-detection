@@ -19,7 +19,7 @@ function M.parse(arg)
     cmd:option('-model',            '',             'Model to use for training')
     cmd:option('-verbose',          'false',        'Print stats for every batch')
     cmd:option('-cudnn',            'false',             'Use cuda tensor')
-    cmd:option('-balance',            'false',             'Rebalance classes')
+    cmd:option('-balance',          'false',             'Rebalance classes')
     cmd:option('-angle',            '10',             'Rotate image randomly between - x and x degree')
     cmd:option('-image',            '32',             'Rotate image randomly between - x and x degree')
 
