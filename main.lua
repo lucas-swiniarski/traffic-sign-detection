@@ -213,7 +213,8 @@ while epoch <= opt.nEpochs do
       maxepoch = 1,
       config = {
           learningRate = opt.LR,
-          momentum = opt.momentum
+          momentum = opt.momentum,
+          weightDecay = opt.weightDecay
       }
   }
 
