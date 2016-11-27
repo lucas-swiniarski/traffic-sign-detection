@@ -213,7 +213,7 @@ local epoch = 1
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
 
-  list_index_rebalanced, shuffle = balanceTrainingSet(trainDataset, epoch, trainData)
+  list_index_rebalanced, shuffle = balanceTrainingSet(trainDataset, epoch, opt.nEpochs, trainData)
 
   numberOfBatchs = table.getn(list_index_rebalanced) / opt.batchsize
 

@@ -53,7 +53,7 @@ function getTestSample(dataset, idx, DATA_PATH)
   return tranformInputTest(image.load(file))
 end
 
-function balanceTrainingSet(dataset, epoch, trainData)
+function balanceTrainingSet(dataset, epoch, maxEpoch, trainData)
   -- Balance training dataset, less & less given epoch.
   local all_indexes = dataset.__dataset.__perm
   local class_indexes = {}
@@ -74,6 +74,10 @@ function balanceTrainingSet(dataset, epoch, trainData)
       max = table.getn(image_list)
     end
   end
+
+  -- In order to slide toward the initial distribution when epochs near last we do :
+
+  max = max * (maxEpoch - epoch + 1) / maxEpoch
 
   list_index_rebalanced = {}
 
