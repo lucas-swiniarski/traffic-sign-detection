@@ -23,12 +23,12 @@ function build_model(libs)
     return module
   end
 
-  local model = nn.sequential()
+  local model = nn.Sequential()
   model:add(ConvBN(3, 100, 7, 7, 1, 1, 1, 1)) --> 100 x 42 x 42
 
   model:add(SpatialMaxPooling(2,2)) --> 100 x 21 x 21
 
-  local cat = nn.sequential()
+  local cat = nn.Sequential()
   cat:add(ConvBN(100, 150, 4, 4)) --> 150 x 18 x 18
   cat:add(ConvBN(150, 250, 5, 5, 1, 1, 3, 3)) --> 250 x 18 x 18
 
