@@ -8,7 +8,8 @@ function transformInput(inp, theta_max, width, height)
   f = tnt.transform.compose{
       [1] = function(img) return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear') end,
       [2] = function(img) return image.translate(img, torch.uniform(0, 10), torch.uniform(0, 10)) end,
-      [3] = function(img) return image.scale(img, width, height, 'bicubic') end
+      [3] = function(img) return image.scale(img, width + torch.random(-10, 10), height + torch.random(-10, 10), 'bicubic') end,
+      [4] = function(img) return image.scale(img, width, height, 'bicubic') end
   }
   return f(inp)
 end
@@ -20,11 +21,15 @@ function tranformInputTest(inp, width, height)
   return f(inp)
 end
 
-function getTrainSample(dataset, idx, DATA_PATH, theta_max, width, height)
+function getTrainSample(dataset, idx, DATA_PATH, theta_max, width, height, isTraining)
   r = dataset[idx]
   classId, track, file = r[9], r[1], r[2]
   file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
-  return transformInput(image.load(DATA_PATH .. '/train_images/'..file), theta_max, width, height)
+  if isTraining then
+    return transformInput(image.load(DATA_PATH .. '/train_images/'..file), theta_max, width, height)
+  else
+    return tranformInputTest(image.load(DATA_PATH .. '/train_images/'..file), width, height)
+  end
 end
 
 function getTrainLabel(dataset, idx)
