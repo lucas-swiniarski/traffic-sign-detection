@@ -1,7 +1,6 @@
 require 'torch'
 require 'optim'
 require 'os'
-require 'optim'
 require 'xlua'
 require 'math'
 
@@ -15,10 +14,12 @@ local image = require 'image'
 local optParser = require 'opts'
 local opt = optParser.parse(arg)
 
-local WIDTH, HEIGHT = 32, 32
 local DATA_PATH = (opt.data ~= '' and opt.data or './data/')
 
 local theta_max = opt.angle / 360 * math.pi
+
+local util = require 'utils'
+
 
 torch.setdefaulttensortype('torch.DoubleTensor')
 
@@ -29,49 +30,16 @@ torch.manualSeed(opt.manualSeed)
 local lopt = opt
 local lfunctions = {}
 
-function resize(img)
-  return image.scale(img, WIDTH,HEIGHT, 'bicubic')
-end
-
-function rotate(img)
-  return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear')
-end
-
-
---[[
--- Hint:  Should we add some more transforms? shifting, scaling?
--- Should all images be of size 32x32?  Are we losing
--- information by resizing bigger images to a smaller size?
---]]
-function transformInput(inp)
-    f = tnt.transform.compose{
-        [1] = rotate,
-        [2] = resize
-    }
-    return f(inp)
-end
-
-function getTrainSample(dataset, idx)
-  r = dataset[idx]
-  classId, track, file = r[9], r[1], r[2]
-  file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
-  return transformInput(image.load(DATA_PATH .. '/train_images/'..file))
-end
-
-function getTrainLabel(dataset, idx)
-  return torch.LongTensor{dataset[idx][9] + 1}
-end
-
-function getTestSample(dataset, idx)
-  r = dataset[idx]
-  file = DATA_PATH .. "/test_images/" .. string.format("%05d.ppm", r[1])
-  return transformInput(image.load(file))
-end
-
-function getIterator(dataset)
+function getIterator(dataset, list_index_rebalanced, shuffle)
   local d = tnt.BatchDataset{
-      batchsize = opt.batchsize,
-      dataset = dataset
+    dataset = tnt.ResampleDataset{
+      dataset = dataset,
+      size = table.getn(list_index_rebalanced),
+      sampler = function(dataset, idx)
+        return list_index_rebalanced[shuffle[idx]]
+      end
+    },
+    batchsize = opt.batchsize
   }
 
   return tnt.ParallelDatasetIterator{
@@ -83,45 +51,12 @@ function getIterator(dataset)
 
       opt = lopt
       theta_max = theta_max
+      DATA_PATH = DATA_PATH
 
-      function resize(img)
-        return image.scale(img, WIDTH,HEIGHT, 'bicubic')
-      end
+      list_index_rebalanced = list_index_rebalanced
+      shuffle = shuffle
 
-      function rotate(img)
-        return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear')
-      end
-
-
-      --[[
-      -- Hint:  Should we add some more transforms? shifting, scaling?
-      -- Should all images be of size 32x32?  Are we losing
-      -- information by resizing bigger images to a smaller size?
-      --]]
-      function transformInput(inp)
-          f = tnt.transform.compose{
-              [1] = rotate,
-              [2] = resize
-          }
-          return f(inp)
-      end
-
-      function getTrainSample(dataset, idx)
-        r = dataset[idx]
-        classId, track, file = r[9], r[1], r[2]
-        file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
-        return transformInput(image.load(DATA_PATH .. '/train_images/'..file))
-      end
-
-      function getTrainLabel(dataset, idx)
-        return torch.LongTensor{dataset[idx][9] + 1}
-      end
-
-      function getTestSample(dataset, idx)
-        r = dataset[idx]
-        file = DATA_PATH .. "/test_images/" .. string.format("%05d.ppm", r[1])
-        return transformInput(image.load(file))
-      end
+      local utils = require 'utils'
     end,
     closure = function()
       return d
@@ -129,59 +64,8 @@ function getIterator(dataset)
   }
 end
 
-function balanceTrainingSet(dataset, epoch, trainData)
-  print(" Balancing training set ... ")
-  -- Balance training dataset, less & less given epoch.
-  local all_indexes = dataset.__dataset.__perm
-  local class_indexes = {}
-
-  for i = 1, dataset.__partitionsizes[1] do
-    local label = getTrainLabel(trainData, all_indexes[i])[1]
-    if class_indexes[label] ~= nil then
-      table.insert(class_indexes[label], i)
-    else
-      class_indexes[label]= {i}
-    end
-  end
-
-  local max = 0
-
-  for class, image_list in pairs(class_indexes) do
-    if table.getn(image_list) > max then
-      max = table.getn(image_list)
-    end
-  end
-
-  list_index_rebalanced = {}
-
-  for class, image_list in pairs(class_indexes) do
-    for i, image in pairs(image_list) do
-      table.insert(list_index_rebalanced, image)
-    end
-
-    local image_inserted = table.getn(image_list)
-
-    while image_inserted < max do
-      table.insert(list_index_rebalanced, image_list[torch.random(#image_list)])
-      image_inserted = image_inserted + 1
-    end
-  end
-
-  local shuffle = torch.randperm(table.getn(list_index_rebalanced))
-
-  print("Done ... ")
-
-  return tnt.ResampleDataset{
-    dataset = dataset,
-    size = table.getn(list_index_rebalanced),
-    sampler = function(dataset, idx)
-      return list_index_rebalanced[shuffle[idx]]
-    end
-  }
-end
-
-local trainData = torch.load(DATA_PATH..'train.t7')
-local testData = torch.load(DATA_PATH..'test.t7')
+local trainData = torch.load(DATA_PATH ..'train.t7')
+local testData = torch.load(DATA_PATH ..'test.t7')
 
 trainDataset = tnt.SplitDataset{
     partitions = {train=(100 - opt.val) / 100, val=opt.val / 100},
@@ -197,8 +81,8 @@ trainDataset = tnt.SplitDataset{
             list = torch.range(1, trainData:size(1)):long(),
             load = function(idx)
                 return {
-                    input =  getTrainSample(trainData, idx),
-                    target = getTrainLabel(trainData, idx)
+                    input =  getTrainSample(trainData, idx, DATA_PATH, theta_max),
+                    target = getTrainLabel(trainData, idx, DATA_PATH)
                 }
             end
         }
@@ -212,7 +96,7 @@ testDataset = tnt.ListDataset{
     list = torch.range(1, testData:size(1)):long(),
     load = function(idx)
         return {
-            input = getTestSample(testData, idx),
+            input = getTestSample(testData, idx, DATA_PATH),
             sampleId = torch.LongTensor{testData[idx][1]}
         }
     end
@@ -321,14 +205,14 @@ local epoch = 1
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
 
-  balancedTrainDataset = balanceTrainingSet(trainDataset, epoch, trainData)
+  list_index_rebalanced, shuffle = balanceTrainingSet(trainDataset, epoch, trainData)
 
-  numberOfBatchs = balancedTrainDataset:size() / opt.batchsize
+  numberOfBatchs = table.getn(list_index_rebalanced) / opt.batchsize
 
   engine:train{
       network = model,
       criterion = criterion,
-      iterator = getIterator(balancedTrainDataset),
+      iterator = getIterator(trainDataset, list_index_rebalanced, shuffle),
       optimMethod = optim.sgd,
       maxepoch = 1,
       config = {
