@@ -10,21 +10,19 @@ function build_model(libs)
 
   local model  = nn.Sequential()
 
-  model:add(SpatialConvolution(3, 16, 3, 3, 1, 1, 1, 1)) -- 16 x 48 x 48
+  model:add(SpatialConvolution(3, 100, 7, 7)) -- 100 x 42 x 42
   model:add(ReLU())
-  model:add(SpatialMaxPooling(2,2)) -- 16 x 24 x 24
-  model:add(SpatialConvolution(16, 32, 5, 5, 1, 1, 2, 2)) -- 32 x 24 x 24
+  model:add(SpatialMaxPooling(2,2)) -- 100 x 21 x 21
+  model:add(SpatialConvolution(100, 150, 4, 4)) -- 150 x 18 x 18
   model:add(ReLU())
-  model:add(SpatialMaxPooling(2,2)) -- 32 x 12 x 12
-  model:add(SpatialConvolution(32, 64, 7, 7, 1, 1, 3, 3)) -- 64 x 12 x 12
+  model:add(SpatialMaxPooling(2,2)) -- 150 x 9 x 9
+  model:add(SpatialConvolution(150, 250, 4, 4)) -- 250 x 6 x 6
   model:add(ReLU())
-  model:add(SpatialMaxPooling(2,2)) -- 64 x 6 x 6
-  model:add(SpatialConvolution(64, 64, 11, 11, 1, 1, 5, 5)) -- 64 x 12 x 12
-  model:add(ReLU())
-  model:add(nn.View(9216))
-  model:add(nn.Linear(1024, 86))
+  model:add(SpatialMaxPooling(2,2)) -- 250 x 3 x 3
+  model:add(nn.View(2250))
+  model:add(nn.Linear(2250, 300))
   model:add(nn.ReLU())
-  model:add(nn.Linear(86, 43))
+  model:add(nn.Linear(300, 43))
 
   return model
 end

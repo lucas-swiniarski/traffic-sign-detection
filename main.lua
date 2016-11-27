@@ -77,8 +77,8 @@ trainDataset = tnt.SplitDataset{
             list = torch.range(1, trainData:size(1)):long(),
             load = function(idx)
                 return {
-                    input =  getTrainSample(trainData, idx, DATA_PATH, theta_max),
-                    target = getTrainLabel(trainData, idx, DATA_PATH)
+                    input =  getTrainSample(trainData, idx, DATA_PATH, theta_max, opt.image, opt.image),
+                    target = getTrainLabel(trainData, idx, DATA_PATH, opt.image, opt.image)
                 }
             end
         }
@@ -201,23 +201,40 @@ local epoch = 1
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
 
-  -- list_index_rebalanced is a list of indexes for
-  list_index_rebalanced, shuffle = balanceTrainingSet(trainDataset, epoch, opt.nEpochs, trainData)
+  if opt.balance == true then
+    list_index_rebalanced, shuffle = balanceTrainingSet(trainDataset, epoch, opt.nEpochs, trainData)
 
-  numberOfBatchs = torch.floor(table.getn(list_index_rebalanced) / opt.batchsize)
+    numberOfBatchs = torch.floor(table.getn(list_index_rebalanced) / opt.batchsize)
 
-  engine:train{
-      network = model,
-      criterion = criterion,
-      iterator = getIterator(trainDataset),
-      optimMethod = optim.sgd,
-      maxepoch = 1,
-      config = {
-          learningRate = opt.LR,
-          momentum = opt.momentum,
-          weightDecay = opt.weightDecay
-      }
-  }
+    engine:train{
+        network = model,
+        criterion = criterion,
+        iterator = getIterator(trainDataset, list_index_rebalanced, shuffle),
+        optimMethod = optim.sgd,
+        maxepoch = 1,
+        config = {
+            learningRate = opt.LR,
+            momentum = opt.momentum,
+            weightDecay = opt.weightDecay
+        }
+    }
+  else
+    numberOfBatchs = torch.floor(trainDataset:size() / opt.batchsize)
+
+    engine:train{
+        network = model,
+        criterion = criterion,
+        iterator = getIterator(trainDataset),
+        optimMethod = optim.sgd,
+        maxepoch = 1,
+        config = {
+            learningRate = opt.LR,
+            momentum = opt.momentum,
+            weightDecay = opt.weightDecay
+        }
+    }
+  end
+
 
   trainDataset:select('val')
   numberOfBatchs = torch.floor(trainDataset:size() / opt.batchsize)

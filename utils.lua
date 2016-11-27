@@ -4,48 +4,37 @@ require 'torch'
 local tnt = require 'torchnet'
 local image = require 'image'
 
-local WIDTH, HEIGHT = 32, 32
-
-function resize(img, theta_max)
-  return image.scale(img, WIDTH,HEIGHT, 'bicubic')
-end
-
---[[
--- Hint:  Should we add some more transforms? shifting, scaling?
--- Should all images be of size 32x32?  Are we losing
--- information by resizing bigger images to a smaller size?
---]]
-function transformInput(inp, theta_max)
-  theta_max = theta_max
+function transformInput(inp, theta_max, width, height)
   f = tnt.transform.compose{
       [1] = function(img) return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear') end,
-      [2] = resize
+      [2] = function(img) return image.translate(img, torch.uniform(0, 10), torch.uniform(0, 10)) end,
+      [3] = function(img) return image.scale(img, width, height, 'bicubic') end
   }
   return f(inp)
 end
 
-function tranformInputTest(inp)
+function tranformInputTest(inp, width, height)
   f = tnt.transform.compose{
-      [1] = resize
+      [1] = function(img) return image.scale(img, width, height, 'bicubic') end
   }
   return f(inp)
 end
 
-function getTrainSample(dataset, idx, DATA_PATH, theta_max)
+function getTrainSample(dataset, idx, DATA_PATH, theta_max, width, height)
   r = dataset[idx]
   classId, track, file = r[9], r[1], r[2]
   file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
-  return transformInput(image.load(DATA_PATH .. '/train_images/'..file), theta_max)
+  return transformInput(image.load(DATA_PATH .. '/train_images/'..file), theta_max, width, height)
 end
 
 function getTrainLabel(dataset, idx)
   return torch.LongTensor{dataset[idx][9] + 1}
 end
 
-function getTestSample(dataset, idx, DATA_PATH)
+function getTestSample(dataset, idx, DATA_PATH, width, height)
   r = dataset[idx]
   file = DATA_PATH .. "/test_images/" .. string.format("%05d.ppm", r[1])
-  return tranformInputTest(image.load(file))
+  return tranformInputTest(image.load(file), width, height)
 end
 
 function balanceTrainingSet(dataset, epoch, maxEpoch, trainData)

@@ -21,6 +21,7 @@ function M.parse(arg)
     cmd:option('-cudnn',            'false',             'Use cuda tensor')
     cmd:option('-balance',            'false',             'Rebalance classes')
     cmd:option('-angle',            '10',             'Rotate image randomly between - x and x degree')
+    cmd:option('-image',            '32',             'Rotate image randomly between - x and x degree')
 
     local opt = cmd:parse(arg or {})
 
