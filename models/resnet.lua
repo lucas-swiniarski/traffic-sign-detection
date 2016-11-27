@@ -1,4 +1,5 @@
 local nn = require 'nn'
+local cudnn = require 'cudnn'
 
 -- Build model with cudnn Convolution if necessary :
 -- 48x48 entry
@@ -6,6 +7,7 @@ local nn = require 'nn'
 function build_model(libs)
   local SpatialConvolution = libs['SpatialConvolution']
   local SpatialMaxPooling = libs['SpatialMaxPooling']
+  local SpatialBatchNormalization = cudnn.SpatialBatchNormalization
   local ReLU = libs['ReLU']
 
   local function ConvBN(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH)
