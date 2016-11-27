@@ -160,12 +160,7 @@ local numberOfBatchs = 0
 engine.hooks.onForwardCriterion = function(state)
     meter:add(state.criterion.output)
     clerr:add(state.network.output, state.sample.target)
-    if not opt.verbose ~= true then
-        print(string.format("%s Batch: %d/%d; avg. loss: %2.4f; avg. error: %2.4f",
-                mode, batch, numberOfBatchs, meter:value(), clerr:value{k = 1}))
-    else
-        xlua.progress(batch, numberOfBatchs)
-    end
+    xlua.progress(batch, numberOfBatchs)
     batch = batch + 1 -- batch increment has to happen here to work for train, val and test.
     timer:incUnit()
 end
