@@ -201,6 +201,7 @@ local epoch = 1
 while epoch <= opt.nEpochs do
   trainDataset:select('train')
 
+  -- list_index_rebalanced is a list of indexes for
   list_index_rebalanced, shuffle = balanceTrainingSet(trainDataset, epoch, opt.nEpochs, trainData)
 
   numberOfBatchs = torch.floor(table.getn(list_index_rebalanced) / opt.batchsize)
@@ -208,7 +209,7 @@ while epoch <= opt.nEpochs do
   engine:train{
       network = model,
       criterion = criterion,
-      iterator = getIterator(trainDataset, list_index_rebalanced, shuffle),
+      iterator = getIterator(trainDataset),
       optimMethod = optim.sgd,
       maxepoch = 1,
       config = {
