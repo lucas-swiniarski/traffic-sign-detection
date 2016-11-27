@@ -31,8 +31,9 @@ local lopt = opt
 local lfunctions = {}
 
 function getIterator(dataset, list_index_rebalanced, shuffle)
+  local d = nil
   if list_index_rebalanced ~= nil then
-    local d = tnt.BatchDataset{
+    d = tnt.BatchDataset{
       dataset = tnt.ResampleDataset{
         dataset = dataset,
         size = table.getn(list_index_rebalanced),
@@ -43,7 +44,7 @@ function getIterator(dataset, list_index_rebalanced, shuffle)
       batchsize = opt.batchsize
     }
   else
-    local d = tnt.BatchDataset{
+    d = tnt.BatchDataset{
       dataset = dataset,
       batchsize = opt.batchsize
     }
