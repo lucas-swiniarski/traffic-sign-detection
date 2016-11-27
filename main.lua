@@ -130,6 +130,7 @@ function getIterator(dataset)
 end
 
 function balanceTrainingSet(dataset, epoch, trainData)
+  print(" Balancing training set ... ")
   -- Balance training dataset, less & less given epoch.
   local all_indexes = dataset.__dataset.__perm
   local class_indexes = {}
@@ -162,10 +163,13 @@ function balanceTrainingSet(dataset, epoch, trainData)
 
     while image_inserted < max do
       table.insert(list_index_rebalanced, image_list[torch.random(#image_list)])
+      image_inserted = image_inserted + 1
     end
   end
 
   local shuffle = torch.randperm(table.getn(list_index_rebalanced))
+
+  print("Done ... ")
 
   return tnt.ResampleDataset{
     dataset = dataset,
