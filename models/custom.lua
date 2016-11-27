@@ -16,11 +16,11 @@ function build_model(libs)
   model:add(SpatialConvolution(32, 64, 5, 5, 1, 1, 2, 2)) -- 126 x 16 x 16
   model:add(ReLU())
   model:add(SpatialMaxPooling(2,2)) -- 128 x 8 x 8
-  model:add(SpatialConvolution(64, 128, 11, 11, 1, 1, 5, 5)) -- 128 x 8 x 8
+  model:add(SpatialConvolution(64, 128, 11, 11, 1, 1, 5, 5)) -- 64 x 4 x 4
   model:add(ReLU())
   model:add(SpatialMaxPooling(2,2))
-  model:add(nn.View(8192))
-  model:add(nn.Linear(8192, 86))
+  model:add(nn.View(2048))
+  model:add(nn.Linear(2048, 86))
   model:add(nn.ReLU())
   model:add(nn.Linear(86, 43))
 
