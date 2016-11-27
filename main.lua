@@ -31,16 +31,23 @@ local lopt = opt
 local lfunctions = {}
 
 function getIterator(dataset, list_index_rebalanced, shuffle)
-  local d = tnt.BatchDataset{
-    dataset = tnt.ResampleDataset{
+  if list_index_rebalanced ~= nil then
+    local d = tnt.BatchDataset{
+      dataset = tnt.ResampleDataset{
+        dataset = dataset,
+        size = table.getn(list_index_rebalanced),
+        sampler = function(dataset, idx)
+          return list_index_rebalanced[shuffle[idx]]
+        end
+      },
+      batchsize = opt.batchsize
+    }
+  else
+    local d = tnt.BatchDataset{
       dataset = dataset,
-      size = table.getn(list_index_rebalanced),
-      sampler = function(dataset, idx)
-        return list_index_rebalanced[shuffle[idx]]
-      end
-    },
-    batchsize = opt.batchsize
-  }
+      batchsize = opt.batchsize
+    }
+  end
 
   return tnt.ParallelDatasetIterator{
     nthread = opt.nThreads,
