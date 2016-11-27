@@ -10,7 +10,7 @@
 
 module purge
 
-cd /scratch/ls4411/cv_hm3/traffic-sign-detection
+cd /work/ls4411/cv_hm3/traffic-sign-detection/
 
 module load torch/gnu/20160623
 
