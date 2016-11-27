@@ -4,11 +4,6 @@ require 'os'
 require 'xlua'
 require 'math'
 
---[[
---  Hint:  Plot as much as you can.
---  Look into torch wiki for packages that can help you plot.
---]]
-
 local tnt = require 'torchnet'
 local image = require 'image'
 local optParser = require 'opts'
@@ -20,12 +15,9 @@ local theta_max = opt.angle / 360 * math.pi
 
 local util = require 'utils'
 
-
 torch.setdefaulttensortype('torch.DoubleTensor')
 
--- torch.setnumthreads(1)
 torch.manualSeed(opt.manualSeed)
--- cutorch.manualSeedAll(opt.manualSeed)
 
 local lopt = opt
 local lfunctions = {}
