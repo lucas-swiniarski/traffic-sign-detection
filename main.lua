@@ -13,7 +13,7 @@ local DATA_PATH = (opt.data ~= '' and opt.data or './data/')
 
 local theta_max = opt.angle / 360 * math.pi
 
-local util = require 'utils'
+local utils = require 'utils'
 
 torch.setdefaulttensortype('torch.DoubleTensor')
 
