@@ -80,8 +80,8 @@ trainDataset = tnt.SplitDataset{
             list = torch.range(1, trainData:size(1)):long(),
             load = function(idx)
                 return {
-                    input =  utils.getTrainSample(trainData, idx, DATA_PATH, theta_max, opt.image, opt.image, isTraining),
-                    target = utils.getTrainLabel(trainData, idx, DATA_PATH, opt.image, opt.image)
+                    input =  getTrainSample(trainData, idx, DATA_PATH, theta_max, opt.image, opt.image, isTraining),
+                    target = getTrainLabel(trainData, idx, DATA_PATH, opt.image, opt.image)
                 }
             end
         }
