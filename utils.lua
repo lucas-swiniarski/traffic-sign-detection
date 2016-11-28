@@ -15,7 +15,6 @@ function transformInput(inp, theta_max, width, height)
 end
 
 function tranformInputTest(inp, width, height)
-  print 'Not changing image'
   f = tnt.transform.compose{
       [1] = function(img) return image.scale(img, width, height, 'bicubic') end
   }
