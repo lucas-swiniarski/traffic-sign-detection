@@ -43,28 +43,49 @@ function getIterator(dataset, isTraining, list_index_rebalanced, shuffle)
       batchsize = opt.batchsize
     }
   end
+  if isTraining then
+    return tnt.ParallelDatasetIterator{
+      nthread = opt.nThreads,
+      init = function()
+        local tnt = require 'torchnet'
+        local image = require'image'
+        local math = require 'math'
 
-  return tnt.ParallelDatasetIterator{
-    nthread = opt.nThreads,
-    init = function()
-      local tnt = require 'torchnet'
-      local image = require'image'
-      local math = require 'math'
+        opt = lopt
+        theta_max = theta_max
+        DATA_PATH = DATA_PATH
 
-      opt = lopt
-      theta_max = theta_max
-      DATA_PATH = DATA_PATH
-      isTraining = isTraining
+        list_index_rebalanced = list_index_rebalanced
+        shuffle = shuffle
 
-      list_index_rebalanced = list_index_rebalanced
-      shuffle = shuffle
+        local utils = require 'utils'
+      end,
+      closure = function()
+        return d
+      end
+    }
+  else
+    return tnt.ParallelDatasetIterator{
+      nthread = opt.nThreads,
+      init = function()
+        local tnt = require 'torchnet'
+        local image = require'image'
+        local math = require 'math'
 
-      local utils = require 'utils'
-    end,
-    closure = function()
-      return d
-    end
-  }
+        opt = lopt
+        theta_max = 0
+        DATA_PATH = DATA_PATH
+
+        list_index_rebalanced = list_index_rebalanced
+        shuffle = shuffle
+
+        local utils = require 'utils'
+      end,
+      closure = function()
+        return d
+      end
+    }
+  end
 end
 
 local trainData = torch.load(DATA_PATH ..'train.t7')
@@ -78,7 +99,7 @@ trainDataset = tnt.SplitDataset{
             list = torch.range(1, trainData:size(1)):long(),
             load = function(idx)
                 return {
-                    input =  getTrainSample(trainData, idx, DATA_PATH, theta_max, opt.image, opt.image, isTraining),
+                    input =  getTrainSample(trainData, idx, DATA_PATH, theta_max, opt.image, opt.image),
                     target = getTrainLabel(trainData, idx, DATA_PATH, opt.image, opt.image)
                 }
             end
