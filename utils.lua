@@ -27,7 +27,7 @@ function getTrainSample(dataset, idx, DATA_PATH, theta_max, width, height)
   classId, track, file = r[9], r[1], r[2]
   file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
   print(theta_max)
-  if theta_max > 5 then
+  if theta_max > 0 then
     return transformInput(image.load(DATA_PATH .. '/train_images/'..file), theta_max, width, height)
   else
     return tranformInputTest(image.load(DATA_PATH .. '/train_images/'..file), width, height)

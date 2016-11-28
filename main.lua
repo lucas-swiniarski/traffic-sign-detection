@@ -43,53 +43,34 @@ function getIterator(dataset, isTraining, list_index_rebalanced, shuffle)
       batchsize = opt.batchsize
     }
   end
-  if isTraining then
-    return tnt.ParallelDatasetIterator{
-      nthread = opt.nThreads,
-      init = function()
-        local tnt = require 'torchnet'
-        local image = require'image'
-        local math = require 'math'
 
-        opt = lopt
-        theta_max = theta_max
-        DATA_PATH = DATA_PATH
+  return tnt.ParallelDatasetIterator{
+    nthread = opt.nThreads,
+    init = function()
+      local tnt = require 'torchnet'
+      local image = require'image'
+      local math = require 'math'
 
-        list_index_rebalanced = list_index_rebalanced
-        shuffle = shuffle
+      local opt = lopt
+      local theta_max = theta_max
+      local DATA_PATH = DATA_PATH
 
-        local utils = require 'utils'
-      end,
-      closure = function()
-        return d
-      end
-    }
-  else
-    return tnt.ParallelDatasetIterator{
-      nthread = opt.nThreads,
-      init = function()
-        local tnt = require 'torchnet'
-        local image = require'image'
-        local math = require 'math'
+      local list_index_rebalanced = list_index_rebalanced
+      local shuffle = shuffle
+      local isTraining = isTraining
 
-        opt = lopt
-        theta_max = 0
-        DATA_PATH = DATA_PATH
-
-        list_index_rebalanced = list_index_rebalanced
-        shuffle = shuffle
-
-        local utils = require 'utils'
-      end,
-      closure = function()
-        return d
-      end
-    }
-  end
+      local utils = require 'utils'
+    end,
+    closure = function()
+      return d
+    end
+  }
 end
 
 local trainData = torch.load(DATA_PATH ..'train.t7')
 local testData = torch.load(DATA_PATH ..'test.t7')
+
+local isTraining = true
 
 trainDataset = tnt.SplitDataset{
     partitions = {train=(100 - opt.val) / 100, val=opt.val / 100},
@@ -99,8 +80,8 @@ trainDataset = tnt.SplitDataset{
             list = torch.range(1, trainData:size(1)):long(),
             load = function(idx)
                 return {
-                    input =  getTrainSample(trainData, idx, DATA_PATH, theta_max, opt.image, opt.image),
-                    target = getTrainLabel(trainData, idx, DATA_PATH, opt.image, opt.image)
+                    input =  utils.getTrainSample(trainData, idx, DATA_PATH, theta_max, opt.image, opt.image, isTraining),
+                    target = utils.getTrainLabel(trainData, idx, DATA_PATH, opt.image, opt.image)
                 }
             end
         }
@@ -121,7 +102,7 @@ testDataset = tnt.ListDataset{
 }
 
 -- If cudnn, get the fast convolutions
-libs = {}
+local libs = {}
 
 if opt.cudnn then
     print("using cudnn")
@@ -223,6 +204,8 @@ while epoch <= opt.nEpochs do
 
     numberOfBatchs = torch.floor(table.getn(list_index_rebalanced) / opt.batchsize)
 
+    isTraining = true
+
     engine:train{
         network = model,
         criterion = criterion,
@@ -255,6 +238,7 @@ while epoch <= opt.nEpochs do
 
   trainDataset:select('val')
   numberOfBatchs = torch.floor(trainDataset:size() / opt.batchsize)
+  isTraining = false
 
   engine:test{
       network = model,
@@ -299,6 +283,8 @@ end
 engine.hooks.onEnd = function(state)
   submission:close()
 end
+
+isTraining = false
 
 engine:test{
     network = model,
