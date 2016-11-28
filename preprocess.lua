@@ -7,11 +7,11 @@ local image = require 'image'
 local utils = require 'utils'
 local paths = require 'paths'
 
-local trainData = torch.load(DATA_PATH ..'train.t7')
-local testData = torch.load(DATA_PATH ..'test.t7')
-
 local DATA_PATH_IN = "./data/"
 local DATA_PATH_OUT = "./data_scaled/"
+
+local trainData = torch.load(DATA_PATH_IN ..'train.t7')
+local testData = torch.load(DATA_PATH_IN ..'test.t7')
 
 torch.setdefaulttensortype('torch.DoubleTensor')
 
