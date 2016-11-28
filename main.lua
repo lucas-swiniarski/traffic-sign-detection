@@ -22,7 +22,7 @@ torch.manualSeed(opt.manualSeed)
 local lopt = opt
 local lfunctions = {}
 
-function getIterator(dataset, list_index_rebalanced, shuffle)
+function getIterator(dataset, isTraining, list_index_rebalanced, shuffle)
 
   local d = nil
 
@@ -54,6 +54,7 @@ function getIterator(dataset, list_index_rebalanced, shuffle)
       opt = lopt
       theta_max = theta_max
       DATA_PATH = DATA_PATH
+      isTraining = isTraining
 
       list_index_rebalanced = list_index_rebalanced
       shuffle = shuffle
@@ -69,6 +70,8 @@ end
 local trainData = torch.load(DATA_PATH ..'train.t7')
 local testData = torch.load(DATA_PATH ..'test.t7')
 
+local isTraining = true
+
 trainDataset = tnt.SplitDataset{
     partitions = {train=(100 - opt.val) / 100, val=opt.val / 100},
     initialpartition = 'train',
@@ -77,7 +80,7 @@ trainDataset = tnt.SplitDataset{
             list = torch.range(1, trainData:size(1)):long(),
             load = function(idx)
                 return {
-                    input =  getTrainSample(trainData, idx, DATA_PATH, theta_max, opt.image, opt.image),
+                    input =  getTrainSample(trainData, idx, DATA_PATH, theta_max, opt.image, opt.image, isTraining),
                     target = getTrainLabel(trainData, idx, DATA_PATH, opt.image, opt.image)
                 }
             end
@@ -204,7 +207,7 @@ while epoch <= opt.nEpochs do
     engine:train{
         network = model,
         criterion = criterion,
-        iterator = getIterator(trainDataset, list_index_rebalanced, shuffle),
+        iterator = getIterator(trainDataset, true, list_index_rebalanced, shuffle),
         optimMethod = optim.sgd,
         maxepoch = 1,
         config = {
@@ -219,7 +222,7 @@ while epoch <= opt.nEpochs do
     engine:train{
         network = model,
         criterion = criterion,
-        iterator = getIterator(trainDataset),
+        iterator = getIterator(trainDataset, true),
         optimMethod = optim.sgd,
         maxepoch = 1,
         config = {
@@ -237,7 +240,7 @@ while epoch <= opt.nEpochs do
   engine:test{
       network = model,
       criterion = criterion,
-      iterator = getIterator(trainDataset)
+      iterator = getIterator(trainDataset, false)
   }
 
   print('Done with Epoch '..tostring(epoch))
@@ -280,7 +283,7 @@ end
 
 engine:test{
     network = model,
-    iterator = getIterator(testDataset)
+    iterator = getIterator(testDataset, false)
 }
 
 print("The End!")

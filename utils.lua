@@ -5,6 +5,7 @@ local tnt = require 'torchnet'
 local image = require 'image'
 
 function transformInput(inp, theta_max, width, height)
+  print 'Rotate translate scale'
   f = tnt.transform.compose{
       [1] = function(img) return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear') end,
       [2] = function(img) return image.translate(img, torch.random(0, 10), torch.random(0, 10)) end,
@@ -15,6 +16,7 @@ function transformInput(inp, theta_max, width, height)
 end
 
 function tranformInputTest(inp, width, height)
+  print 'Not changing image'
   f = tnt.transform.compose{
       [1] = function(img) return image.scale(img, width, height, 'bicubic') end
   }
