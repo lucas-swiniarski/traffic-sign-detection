@@ -30,14 +30,25 @@ function build_model(libs)
 
   model:add(SpatialMaxPooling(2,2)) --> 100 x 21 x 21
 
-  local cat = nn.Sequential()
-  cat:add(ConvBN(100, 150, 4, 4)) --> 150 x 18 x 18
-  cat:add(ConvBN(150, 250, 5, 5, 1, 1, 3, 3)) --> 250 x 18 x 18
+  local cat1 = nn.Sequential()
+  cat1:add(ConvBN(100, 100, 5, 5, 1, 1, 2, 2))
+  cat1:add(ConvBN(100, 100, 5, 5, 1, 1, 2, 2))
 
-  model:add(Residual(cat))
-  model:add(SpatialMaxPooling(2,2)) --> 250 x 9 x 9
-  model:add(ConvBN(250, 250, 4, 4)) --> 250 x 6 x 6
-  model:add(SpatialMaxPooling(2, 2)) --> 250 x 3 x 3
+  model:add(Residual(cat1)) --> 100 x 21 x 21
+
+  model:add(ConvBN(100, 150, 4, 4)) --> 150 x 18 x 18
+  model:add(SpatialMaxPooling(2,2)) --> 150 x 9 x 9
+
+  local cat2 = nn.Sequential()
+  cat2:add(ConvBN(150, 150, 5, 5, 1, 1, 2, 2))
+  cat2:add(ConvBN(150, 150, 5, 5, 1, 1, 2, 2))
+
+  model:add(Residual(cat2)) --> 150 x 9 x 9
+
+  model:add(SpatialConvolution(150, 250, 4, 4)) -- 250 x 6 x 6
+  model:add(ReLU())
+  model:add(SpatialMaxPooling(2,2)) --> 250 x 3 x 3
+
   model:add(nn.View(2250))
   model:add(nn.Linear(2250, 300))
   model:add(nn.ReLU())
