@@ -14,5 +14,5 @@ cd /work/ls4411/cv_hm3/traffic-sign-detection/
 
 module load torch/gnu/20160623
 
-th main.lua -model custom48 -cudnn true -batchsize 128 -nEpochs 100 -val 5 -angle 10 -balance true -image 48
+th main.lua -model custom48 -cudnn true -batchsize 128 -nEpochs 40 -val 5 -angle 10 -balance true -image 48
 # leave a blank line at the end

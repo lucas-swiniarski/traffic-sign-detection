@@ -92,7 +92,7 @@ testDataset = tnt.ListDataset{
     list = torch.range(1, testData:size(1)):long(),
     load = function(idx)
         return {
-            input = getTestSample(testData, idx, DATA_PATH),
+            input = getTestSample(testData, idx, DATA_PATH, opt.image, opt.image),
             sampleId = torch.LongTensor{testData[idx][1]}
         }
     end
