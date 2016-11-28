@@ -70,8 +70,6 @@ end
 local trainData = torch.load(DATA_PATH ..'train.t7')
 local testData = torch.load(DATA_PATH ..'test.t7')
 
-local isTraining = true
-
 trainDataset = tnt.SplitDataset{
     partitions = {train=(100 - opt.val) / 100, val=opt.val / 100},
     initialpartition = 'train',

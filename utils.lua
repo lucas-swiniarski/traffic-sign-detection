@@ -5,11 +5,10 @@ local tnt = require 'torchnet'
 local image = require 'image'
 
 function transformInput(inp, theta_max, width, height)
-  print 'Rotate translate scale'
   f = tnt.transform.compose{
       [1] = function(img) return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear') end,
       [2] = function(img) return image.translate(img, torch.random(0, 10), torch.random(0, 10)) end,
-      [3] = function(img) return image.scale(img, width + torch.random(-15, 15), height + torch.random(-15, 15), 'bicubic') end,
+      [3] = function(img) return image.scale(img, width + torch.random(-10, 10), height + torch.random(-10, 10), 'bicubic') end,
       [4] = function(img) return image.scale(img, width, height, 'bicubic') end
   }
   return f(inp)
@@ -27,7 +26,7 @@ function getTrainSample(dataset, idx, DATA_PATH, theta_max, width, height, isTra
   r = dataset[idx]
   classId, track, file = r[9], r[1], r[2]
   file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
-  if isTraining then
+  if isTraining == true then
     return transformInput(image.load(DATA_PATH .. '/train_images/'..file), theta_max, width, height)
   else
     return tranformInputTest(image.load(DATA_PATH .. '/train_images/'..file), width, height)
