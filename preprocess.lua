@@ -18,24 +18,43 @@ torch.setdefaulttensortype('torch.DoubleTensor')
 local sizeTrainData = trainData:size(1)
 local sizeTestData = testData:size(1)
 
+print('Train data : ', sizeTrainData, ' test data : ', sizeTestData)
+
 print(' Loading train images ... ')
 
-allImages = torch.DoubleTensor(trainData:size(1) + testData:size(1), 3, 48, 48)
+local trainImages = torch.DoubleTensor(sizeTrainData, 3, 48, 48)
+
 for i = 1, sizeTrainData do
-  allImages[i] = getTrainSample(trainData, i, DATA_PATH_IN, 0, 48, 48, false)
+  trainImages[i] = getTrainSample(trainData, i, DATA_PATH_IN, 0, 48, 48, false)
   xlua.progress(i, sizeTrainData)
+  if i >= 100 then
+    break
+  end
 end
+print(' ')
 
 print(' Loading test images ... ')
 
+local testImages = torch.DoubleTensor(sizeTestData, 3, 48, 48)
+
 for i = 1, sizeTestData do
-  allImages[sizeTrainData + i] = getTestSample(trainData, i, DATA_PATH_IN, 0, 48, 48, 1)
+  testImages[i] = getTestSample(trainData, i, DATA_PATH_IN, 48, 48)
   xlua.progress(i, sizeTestData)
+  if i > 100 then
+    break
+  end
 end
+
+trainImagesResult = trainImages:copy(trainImages)
+testImagesResult = testImages:copy(testImages)
+
 
 print(' Remove mean ... ')
 -- Remove mean
-allImages = allImages:csub(torch.mean(allImages))
+mean = trainImages:mean(2)
+
+trainImagesResult:add(mean:mul(-1):view(trainImages:size(1),1):expandAs(trainImages))
+testImagesResult:add(mean:mul(-1):view(testImages:size(1),1):expandAs(testImages))
 
 print(' Remove std ... ')
 -- Remove std

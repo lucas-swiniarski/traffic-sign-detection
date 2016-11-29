@@ -25,41 +25,38 @@ function build_model(libs)
     return module
   end
 
-  local model = nn.Sequential()
-  model:add(ConvBN(3, 100, 7, 7, 1, 1, 1, 1)) --> 100 x 42 x 42
+  local function ConvConvResidual(nInputPlane)
+    local cat = nn.Sequential()
+    cat:add(ConvBN(nInputPlane, nInputPlane, 3, 3, 1, 1, 1, 1))
+    cat:add(ConvBN(nInputPlane, nInputPlane, 3, 3, 1, 1, 1, 1))
+    return Residual(cat)
+  end
 
-  model:add(SpatialMaxPooling(2,2)) --> 100 x 21 x 21
+  local model = nn.Sequential() --> 3 x 48 x 48
+  model:add(ConvBN(3, 64, 7, 7, 1, 1, 1, 1)) --> 100 x 42 x 42
 
-  local cat1 = nn.Sequential()
-  cat1:add(ConvBN(100, 100, 3, 5, 1, 1, 1, 1))
-  cat1:add(ConvBN(100, 100, 5, 5, 1, 1, 2, 2))
-  cat1:add(ConvBN(100, 100, 7, 5, 1, 1, 3, 3))
+  model:add(ConvBN(64, 64, 3, 3, 2, 2, 1, 1)) --> 100 x 21 x 21
 
-  model:add(Residual(cat1)) --> 100 x 21 x 21
+  model:add(ConvConvResidual(64))
+  model:add(ConvConvResidual(64))
+  model:add(ConvConvResidual(64))
 
-  model:add(ConvBN(100, 150, 4, 4)) --> 150 x 18 x 18
-  model:add(SpatialMaxPooling(2,2)) --> 150 x 9 x 9
+  model:add(ConvBN(64, 128, 4, 4)) --> 128 x 18 x 18
+  model:add(ConvBN(128, 3, 3, 2, 2, 1, 1)) --> 128 x 9 x 9
 
-  local cat2 = nn.Sequential()
-  cat2:add(ConvBN(150, 150, 3, 3, 1, 1, 1, 1))
-  cat2:add(ConvBN(150, 150, 5, 5, 1, 1, 2, 2))
-  cat2:add(ConvBN(150, 150, 7, 7, 1, 1, 3, 3))
+  model:add(ConvConvResidual(128))
+  model:add(ConvConvResidual(128))
+  model:add(ConvConvResidual(128))
 
-  model:add(Residual(cat2)) --> 150 x 9 x 9
+  model:add(ConvBN(128, 256, 4, 4)) -- 250 x 6 x 6
+  model:add(ConvBN(256, 256, 3, 3, 2, 2, 1, 1)) --> 256 x 3 x 3
 
-  model:add(SpatialConvolution(150, 250, 4, 4)) -- 250 x 6 x 6
-  model:add(ReLU())
-  model:add(SpatialMaxPooling(2,2)) --> 250 x 3 x 3
+  model:add(ConvConvResidual(256))
+  model:add(ConvConvResidual(256))
+  model:add(ConvConvResidual(256))
 
-  local cat3 = nn.Sequential()
-  cat3:add(ConvBN(250, 250, 3, 3, 1, 1, 1, 1))
-  cat3:add(ConvBN(250, 250, 5, 5, 1, 1, 2, 2))
-  cat3:add(ConvBN(250, 250, 7, 7, 1, 1, 3, 3))
-
-  model:add(Residual(cat3))
-
-  model:add(nn.View(2250))
-  model:add(nn.Linear(2250, 300))
+  model:add(nn.View(2304))
+  model:add(nn.Linear(2304, 300))
   model:add(nn.ReLU())
   model:add(nn.Linear(300, 43))
 
