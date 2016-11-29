@@ -8,6 +8,7 @@ function build_model(libs)
   local SpatialConvolution = libs['SpatialConvolution']
   local SpatialMaxPooling = libs['SpatialMaxPooling']
   local SpatialBatchNormalization = cudnn.SpatialBatchNormalization
+  local SpatialAveragePooling = cudnn.SpatialAveragePooling
   local ReLU = libs['ReLU']
 
   local function ConvBN(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH)
@@ -49,14 +50,16 @@ function build_model(libs)
   model:add(ConvConvResidual(128))
 
   model:add(ConvBN(128, 256, 4, 4)) -- 250 x 6 x 6
-  model:add(ConvBN(256, 256, 3, 3, 2, 2, 1, 1)) --> 256 x 3 x 3
+  model:add(ConvBN(256, 256, 3, 3, 2, 2, 1, 1)) --> 256 x 4 x 4
 
   model:add(ConvConvResidual(256))
   model:add(ConvConvResidual(256))
   model:add(ConvConvResidual(256))
 
-  model:add(nn.View(3936))
-  model:add(nn.Linear(3936, 300))
+  model:add(SpatialAveragePooling(2, 2)) --> 256 x 2 x 2
+
+  model:add(nn.View(1024))
+  model:add(nn.Linear(1024, 300))
   model:add(nn.ReLU())
   model:add(nn.Linear(300, 43))
 
