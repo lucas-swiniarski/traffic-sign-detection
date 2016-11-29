@@ -42,7 +42,7 @@ function build_model(libs)
   model:add(ConvConvResidual(64))
 
   model:add(ConvBN(64, 128, 4, 4)) --> 128 x 18 x 18
-  model:add(ConvBN(128, 3, 3, 2, 2, 1, 1)) --> 128 x 9 x 9
+  model:add(ConvBN(128, 128, 3, 3, 2, 2, 1, 1)) --> 128 x 9 x 9
 
   model:add(ConvConvResidual(128))
   model:add(ConvConvResidual(128))
@@ -55,8 +55,8 @@ function build_model(libs)
   model:add(ConvConvResidual(256))
   model:add(ConvConvResidual(256))
 
-  model:add(nn.View(2304))
-  model:add(nn.Linear(2304, 300))
+  model:add(nn.View(3936))
+  model:add(nn.Linear(3936, 300))
   model:add(nn.ReLU())
   model:add(nn.Linear(300, 43))
 
