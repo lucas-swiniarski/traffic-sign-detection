@@ -85,9 +85,9 @@ function getTrainSample(dataset, idx, DATA_PATH, theta_max, width, height, isTra
   file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
   img = image.load(DATA_PATH .. '/train_images/'..file)
   if isTraining == true then
-    return transformInput(img:clone(), theta_max, width, height)
+    return transformInput(image.crop(img, r[5], r[6], r[7], r[8]), theta_max, width, height)
   else
-    return tranformInputTest(img:clone(), width, height)
+    return tranformInputTest(image.crop(img, r[5], r[6], r[7], r[8]), width, height)
   end
 end
 
@@ -99,7 +99,7 @@ function getTestSample(dataset, idx, DATA_PATH, width, height)
   r = dataset[idx]
   file = DATA_PATH .. "/test_images/" .. string.format("%05d.ppm", r[1])
   img = image.load(file)
-  return tranformInputTest(img:clone(), width, height)
+  return tranformInputTest(image.crop(img, r[4], r[5], r[6], r[7]), width, height)
 end
 
 function balanceTrainingSet(dataset, epoch, maxEpoch, trainData)
