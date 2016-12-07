@@ -4,7 +4,7 @@ local cudnn = require 'cudnn'
 -- Build model with cudnn Convolution if necessary :
 -- 52x52 entry
 
--- Best model so far, with 2 convolutions in each residual layer, size 5x5 kernel. 98.3 % accuracy on test set
+-- Best model so far, with 2 convolutions in each residual layer, size 5x5 kernel. 97.8 % accuracy on test set
 
 function build_model(libs)
   local SpatialConvolution = libs['SpatialConvolution']
