@@ -28,7 +28,7 @@ function build_model(libs)
   end
 
   local function Residual2Conv(nInputPlane)
-    local cat = nn.Sequential()
+    local module = nn.Sequential()
     module:add(ConvBN(nInputPlane, nInputPlane, 3, 3, 1, 1, 1, 1))
     module:add(ConvBN(nInputPlane, nInputPlane, 3, 3, 1, 1, 1, 1))
     return Residual(module)
