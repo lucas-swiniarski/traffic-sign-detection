@@ -65,7 +65,7 @@ function transformInput(inp, theta_max, width, height)
     [2] = function(img) return Saturation(0.8)(img) end,
     [3] = function(img) return Brightness(0.8)(img) end,
     [4] = function(img) return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear') end,
-    [5] = function(img) return image.translate(img, torch.random(0, 10), torch.random(0, 10)) end,
+    [5] = function(img) return image.translate(img, torch.random(0, 5), torch.random(0, 5)) end,
     [6] = function(img) return image.scale(img, width + torch.random(-10, 10), height + torch.random(-10, 10), 'bicubic') end,
     [7] = function(img) return image.scale(img, width, height, 'bicubic') end
   }
