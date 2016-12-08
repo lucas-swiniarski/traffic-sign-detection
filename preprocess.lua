@@ -35,7 +35,7 @@ print(' Loading test images ... ')
 local testImages = torch.DoubleTensor(sizeTestData, 3, 48, 48)
 
 for i = 1, sizeTestData do
-  testImages[i] = getTestSample(trainData, i, DATA_PATH_IN, 48, 48)
+  testImages[i] = getTestSample(testData, i, DATA_PATH_IN, 48, 48)
   xlua.progress(i, sizeTestData)
 end
 

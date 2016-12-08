@@ -67,7 +67,7 @@ function transformInput(inp, theta_max, width, height)
     [4] = function(img) return image.rotate(img, torch.uniform(- theta_max, theta_max), 'bilinear') end,
     [5] = function(img) return image.translate(img, torch.random(0, 10), torch.random(0, 10)) end,
     [6] = function(img) return image.scale(img, width + torch.random(-10, 10), height + torch.random(-10, 10)) end,
-    [7] = function(img) return image.scale(img, width, height) end
+    [7] = function(img) return image.scale(img, width, height, 'bicubic') end
   }
   return f(inp)
 end
@@ -99,7 +99,7 @@ function getTestSample(dataset, idx, DATA_PATH, width, height)
   r = dataset[idx]
   file = DATA_PATH .. "/test_images/" .. string.format("%05d.ppm", r[1])
   img = image.load(file)
-  return tranformInputTest(image.crop(img, r[5], r[6], r[7], r[8]), width, height)
+  return tranformInputTest(image.crop(img, r[4], r[5], r[6], r[7]), width, height)
 end
 
 function balanceTrainingSet(dataset, epoch, maxEpoch, trainData)
