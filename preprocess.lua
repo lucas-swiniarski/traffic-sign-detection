@@ -27,9 +27,6 @@ local trainImages = torch.DoubleTensor(sizeTrainData, 3, 48, 48)
 for i = 1, sizeTrainData do
   trainImages[i] = getTrainSample(trainData, i, DATA_PATH_IN, 0, 48, 48, false)
   xlua.progress(i, sizeTrainData)
-  if i >= 100 then
-    break
-  end
 end
 print(' ')
 
@@ -40,9 +37,6 @@ local testImages = torch.DoubleTensor(sizeTestData, 3, 48, 48)
 for i = 1, sizeTestData do
   testImages[i] = getTestSample(trainData, i, DATA_PATH_IN, 48, 48)
   xlua.progress(i, sizeTestData)
-  if i > 100 then
-    break
-  end
 end
 
 local normalization = nn.SpatialContrastiveNormalization(1, image.gaussian1D(7))
