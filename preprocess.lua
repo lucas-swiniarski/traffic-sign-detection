@@ -45,54 +45,40 @@ for i = 1, sizeTestData do
   end
 end
 
-trainImagesResult = trainImages:copy(trainImages)
-testImagesResult = testImages:copy(testImages)
-
-
-print(' Remove mean ... ')
--- Remove mean
-mean = trainImages:mean(2)
-
-trainImagesResult:add(mean:mul(-1):view(trainImages:size(1),1):expandAs(trainImages))
-testImagesResult:add(mean:mul(-1):view(testImages:size(1),1):expandAs(testImages))
-
-print(' Remove std ... ')
--- Remove std
-allImages = allImages:reshape(sizeTrainData + sizeTestData, 3 * 48 * 48)
-allImages = allImages:div(torch.std(allImages:add(10):sqrt(), 2))
-allImages = allImages:reshape(sizeTrainData + sizeTestData, 3, 48, 48)
-
-print(' Create dirs ... ')
-paths.rmall(DATA_PATH_OUT)
-paths.mkdir(DATA_PATH_OUT)
-
-paths.mkdir(DATA_PATH_OUT .. 'train_images')
-paths.mkdir(DATA_PATH_OUT .. 'test_images')
-
-for i = 0, 42 do
-  s = '000'
-  if i < 10 then
-    s = s .. '0'
-  end
-  s = s .. string(i)
-  paths.mkdir(DATA_PATH_OUT .. 'train_images/' .. s)
-end
-
-print(' Save training set ... ')
-
+local normalization = nn.SpatialContrastiveNormalization(1, image.gaussian1D(7))
 for i = 1, sizeTrainData do
-  r = trainData[idx]
-  classId, track, file = r[9], r[1], r[2]
-  file = string.format("%05d/%05d_%05d.ppm", classId, track, file)
-  image.save(DATA_PATH_OUT .. 'train_images/' .. file, allImages[i])
-  xlua.progress(i, sizeTrainData)
+  xlua.progress(i, trainImages:size())
+  -- rgb -> yuv
+  local rgb = trainImages[i]
+  local yuv = image.rgb2yuv(rgb)
+  -- normalize y locally:
+  yuv[1] = normalization(yuv[{{1}}])
+  trainImages[i] = yuv
 end
+-- normalize u globally:
+local mean_u = trainImages:select(2,2):mean()
+local std_u = trainImages:select(2,2):std()
+trainImages:select(2,2):add(-mean_u)
+trainImages:select(2,2):div(std_u)
+-- normalize v globally:
+local mean_v = trainImages:select(2,3):mean()
+local std_v = trainImages:select(2,3):std()
+trainImages:select(2,3):add(-mean_v)
+trainImages:select(2,3):div(std_v)
 
-print(' Save testing set ... ')
-
+-- preprocess testSet
 for i = 1, sizeTestData do
-  r = dataset[idx]
-  file = DATA_PATH_OUT .. "test_images/" .. string.format("%05d.ppm", r[1])
-  image.save(file, allImages[sizeTrainData + i])
-  xlua.progress(i, sizeTestData)
+ xlua.progress(i, testData:size())
+  -- rgb -> yuv
+  local rgb = testImages[i]
+  local yuv = image.rgb2yuv(rgb)
+  -- normalize y locally:
+  yuv[{1}] = normalization(yuv[{{1}}])
+  testImages[i] = yuv
 end
+-- normalize u globally:
+testImages:select(2,2):add(-mean_u)
+testImages:select(2,2):div(std_u)
+-- normalize v globally:
+testImages:select(2,3):add(-mean_v)
+testImages:select(2,3):div(std_v)
