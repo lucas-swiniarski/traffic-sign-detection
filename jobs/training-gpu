@@ -14,5 +14,5 @@ cd /work/ls4411/cv_hm3/traffic-sign-detection/
 
 module load torch/gnu/20160623
 
-th main.lua -model resnet52 -cudnn true -batchsize 128 -nEpochs 10 -val 30 -angle 10 -balance true -image 52
+th main.lua -model resnet52 -cudnn true -batchsize 128 -nEpochs 20 -val 30 -angle 10 -balance true -image 52
 # leave a blank line at the end

@@ -292,3 +292,6 @@ engine:test{
 }
 
 print("The End!")
+
+model:clearState()
+torch.save(opt.model .. "_model.t7", model)
