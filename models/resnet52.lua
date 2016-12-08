@@ -54,10 +54,10 @@ function build_model(libs)
   model:add(Residual2Conv(256))
   model:add(Residual2Conv(256))
 
-  model:add(ConvBN(256, 256, 5, 5, 2, 2, 1 ,1)) --> 256 x 3 x 3
+  model:add(ConvBN(256, 256, 5, 5, 2, 2, 1 ,1)) --> 256 x 2 x 2
 
-  model:add(nn.View(2304))
-  model:add(nn.Linear(2304, 300))
+  model:add(nn.View(1024))
+  model:add(nn.Linear(1024, 300))
   model:add(nn.ReLU())
   model:add(nn.Linear(300, 43))
 
