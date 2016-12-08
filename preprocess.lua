@@ -82,3 +82,6 @@ testImages:select(2,2):div(std_u)
 -- normalize v globally:
 testImages:select(2,3):add(-mean_v)
 testImages:select(2,3):div(std_v)
+
+torch.save(DATA_PATH_OUT .. 'train_dataset.t7', trainImages)
+torch.save(DATA_PATH_OUT .. 'test_dataset.t7', testImages)
