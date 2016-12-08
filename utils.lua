@@ -99,7 +99,7 @@ function getTestSample(dataset, idx, DATA_PATH, width, height)
   r = dataset[idx]
   file = DATA_PATH .. "/test_images/" .. string.format("%05d.ppm", r[1])
   img = image.load(file)
-  return tranformInputTest(image.crop(img, r[4], r[5], r[6], r[7]), width, height)
+  return tranformInputTest(image.crop(img, r[5], r[6], r[7], r[8]), width, height)
 end
 
 function balanceTrainingSet(dataset, epoch, maxEpoch, trainData)
