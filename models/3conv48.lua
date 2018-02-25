@@ -1,3 +1,7 @@
+"""
+Implement a small convnet with 3 convolutions and 2 linear layers on 48-dimensional images.
+"""
+
 local nn = require 'nn'
 
 -- Build model with cudnn Convolution if necessary :

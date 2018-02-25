@@ -1,3 +1,6 @@
+"""
+Parse arguments for the model to train.
+"""
 local M = {}
 
 function M.parse(arg)

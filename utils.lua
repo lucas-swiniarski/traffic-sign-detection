@@ -1,3 +1,9 @@
+"""
+Utility functions, for various treatments of train/test samples.
+Functions for :
+- Data Augmentation
+- Centering the traffic signs.
+"""
 require 'math'
 require 'torch'
 

@@ -1,3 +1,8 @@
+"""
+Implement a smaller residual network with 2 residual blocks.
+A residual block is made of 3 convolutions and a skip connection.
+Works on 48-dimensional inputs.
+"""
 local nn = require 'nn'
 local cudnn = require 'cudnn'
 

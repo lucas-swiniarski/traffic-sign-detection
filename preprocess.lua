@@ -1,3 +1,7 @@
+"""
+Given raw training and test data, normalize it.
+Next step involve a ZCA, or decorrelating the pixels of the images.
+"""
 require 'math'
 require 'torch'
 require 'xlua'
